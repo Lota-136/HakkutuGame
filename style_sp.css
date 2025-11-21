@@ -11,6 +11,8 @@ body {
     display: flex;
     width: 100vw;
     height: 100vh;
+    min-height: -webkit-fill-available;
+    height: 100dvh;
     justify-content: center;
     align-items: center;
     overflow: hidden;
