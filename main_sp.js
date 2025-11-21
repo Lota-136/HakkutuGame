@@ -975,3 +975,17 @@ function doDigAction() {
         }
     }
 }
+
+// 画面サイズが変わった（回転した）時にコンテナの高さを再設定する
+window.addEventListener('resize', () => {
+    const container = document.getElementById('game-container');
+    // svhが効かない古い端末対策として、JSでも高さを強制指定
+    if (container) {
+        container.style.height = window.innerHeight + 'px';
+    }
+});
+
+// 読み込み時にも一度実行
+window.addEventListener('load', () => {
+    window.dispatchEvent(new Event('resize'));
+});
