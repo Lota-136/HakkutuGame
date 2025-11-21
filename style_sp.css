@@ -1,0 +1,153 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background-color: #f0f0f0;
+    overflow: hidden;
+}
+
+/* ゲーム全体のコンテナ */
+#game-container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* ライフ表示エリア */
+#hp-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    padding: 10px;
+}
+
+#hp-container img {
+    width: 40px;
+    height: 40px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+/* ゲーム本体 */
+#game-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Canvas描画エリア */
+#canvas-container {
+    border: 2px solid #c90;
+    line-height: 0;
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* ボタン共通スタイル */
+.buttons {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+}
+
+.btn {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    user-select: none;
+    -webkit-user-drag: none;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.tool-btn.active {
+    transform: scale(1.1);
+}
+
+/* 掘るボタン */
+#action-container .btn {
+    width: 80px;
+    height: 80px;
+}
+
+/* 縦向き*/
+@media (orientation: portrait) {
+    #game-container {
+        flex-direction: column;
+        justify-content: space-around;
+    }
+
+    #game-body {
+        flex-direction: column;
+    }
+
+    #tools-container {
+        flex-direction: row;
+        order: 2;
+    }
+
+    #canvas-container {
+        order: 1;
+    }
+
+    #action-container {
+        justify-content: center;
+    }
+
+    #hp-container {
+        order: -1;
+    }
+}
+
+/* 横向き */
+@media (orientation: landscape) {
+    #game-container {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #game-body {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    #tools-container {
+        flex-direction: column;
+        order: -1;
+        padding-right: 20px;
+    }
+
+    #canvas-container {
+        order: 1;
+    }
+
+    #action-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding-left: 20px;
+    }
+
+    #hp-container {
+        order: -1;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 40px;
+    }
+}

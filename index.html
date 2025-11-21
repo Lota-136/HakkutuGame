@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+    <script>
+        var ua = navigator.userAgent;
+
+        // 以下のいずれかに当てはまれば「タッチ端末（スマホ・タブレット）」とみなす
+        if (
+            ua.indexOf('iPhone') > 0 ||  // iPhone
+            ua.indexOf('iPad') > 0 ||    // 古いiPad
+            ua.indexOf('Android') > 0 || // Android（スマホ・タブレット両方）
+            (ua.indexOf('Macintosh') > 0 && 'ontouchend' in document) // 新しいiPad
+        ) {
+            // スマホ・タブレット用ページへ
+            window.location.href = './sp.html';
+        }
+        else {
+            // それ以外（Windows, Macなどマウス操作のPC）
+            window.location.href = './pc.html';
+        }
+    </script>
+</head>
+
+<body style="background-color: black;">
+</body>
+
+</html>
