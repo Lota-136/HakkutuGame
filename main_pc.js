@@ -15,7 +15,7 @@ const itemName = [
 const explain = [
     "馬を表したはにわです。現代の馬と比べて足が短く、　体には乗馬する時に必要なさまざまな道具がつけられています。",
     "高床式（たかゆかしき）の建物を表現したはにわです。屋根には鰹木（かつおぎ）という、その家に住んでいた人の地位の高さを表すものがついています。",
-    "イスにすわり、５本の弦がある琴（こと）をヒザに　　のせた人物のはにわです。はにわのカケラが発掘されたあと、それをもとに復元されました。",
+    "イスにすわり、５本の弦がある琴をヒザにのせた人物のはにわです。はにわのカケラが発掘されたあと、それをもとに復元されました。",
     "小馬のはにわです。他の馬のはにわにある鞍（くら）やたてがみがなく、発見されたときは「子犬型埴輪」　　として紹介されていました。",
     "横から見た動物のように見えることから獣型勾玉と　　呼ばれており、弥生（やよい）時代前期のものと　　　考えられています。",
     "田原城主の菩提寺（ぼだいじ／先祖のお墓がある寺）　である千光寺（せんこうじ）跡の墓地から発見された　香炉です。"
@@ -34,7 +34,7 @@ document.onmousemove = function (e) {
     mouse.y = e.clientY / scaleRate;
 }
 
-let state = 0;
+let state = 4;
 
 let posX;
 let posY;
@@ -49,6 +49,18 @@ let toolAnimation = 0;
 let damageAnimation = 0;
 let tutorialPage = 0;
 let tutorialAnimation = 0;
+let startTime;
+let timer;
+let timerSeconds;
+let timerMinites;
+let isCollectionDetail = false;
+
+let ls_Ponyhaniwa;
+let ls_horsehaniwa;
+let ls_kotohaniwa;
+let ls_househaniwa;
+let ls_magatama;
+let ls_seijikouro;
 
 let field = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -77,6 +89,7 @@ const imgCursor = new Image();
 const imgArrow = new Image();
 const imgButtonFrame1 = new Image();
 const imgButtonFrame2 = new Image();
+const imgCollectionBack = new Image();
 const imgTitle = new Image();
 const imgBack = new Image();
 
@@ -84,6 +97,26 @@ const sndExcavate = new Audio();
 const sndMiss = new Audio();
 const sndJingle = new Audio();
 const sndTool = new Audio();
+
+// 画像の読み込み
+imgSoil.src = "img/soil.png";
+imgSoil2.src = "img/soil2.png";
+imgShovel1.src = "img/shovel1.png";
+imgShovel2.src = "img/shovel2.png";
+imgSankakuho1.src = "img/sankakuho-1.png";
+imgSankakuho2.src = "img/sankakuho-2.png";
+imgTakebera1.src = "img/takebera1.png";
+imgTakebera2.src = "img/takebera2.png";
+imgHeart1.src = "img/heart1.png";
+imgHeart2.src = "img/heart2.png";
+imgDig.src = "img/dig.png";
+imgCursor.src = "img/cursor.png";
+imgArrow.src = "img/arrow.png";
+imgButtonFrame1.src = "img/buttonframe1.png";
+imgButtonFrame2.src = "img/buttonframe2.png";
+imgCollectionBack.src = "img/collectionBack.png";
+imgTitle.src = "img/title.png";
+imgBack.src = "img/back.png";
 
 // 出土品
 const imgExPaths = ["img/ex_horsehaniwa.png", 
@@ -94,6 +127,12 @@ const imgExPaths = ["img/ex_horsehaniwa.png",
                     "img/ex_seijikouro.png"
 ];
 let imgEx;
+
+imgEx = imgExPaths.map(path => {
+    const img = new Image();
+    img.src = path;
+    return img;
+});
 
 window.onload = setup;
 
@@ -112,35 +151,20 @@ function setup()
     ctx = canvas.getContext(`2d`);
     document.body.appendChild(canvas);
 
-    imgSoil.src = "img/soil.png";
-    imgSoil2.src = "img/soil2.png";
-    imgShovel1.src = "img/shovel1.png";
-    imgShovel2.src = "img/shovel2.png";
-    imgSankakuho1.src = "img/sankakuho-1.png";
-    imgSankakuho2.src = "img/sankakuho-2.png";
-    imgTakebera1.src = "img/takebera1.png";
-    imgTakebera2.src = "img/takebera2.png";
-    imgHeart1.src = "img/heart1.png";
-    imgHeart2.src = "img/heart2.png";
-    imgDig.src = "img/dig.png";
-    imgCursor.src = "img/cursor.png";
-    imgArrow.src = "img/arrow.png";
-    imgButtonFrame1.src = "img/buttonframe1.png";
-    imgButtonFrame2.src = "img/buttonframe2.png";
-    imgTitle.src = "img/title.png";
-    imgBack.src = "img/back.png";
-
-    imgEx = imgExPaths.map(path => {
-        const img = new Image();
-        img.src = path;
-        return img;
-    });
-
     sndExcavate.src = "sound/excavate.mp3";
     sndMiss.src = "sound/miss.mp3";
     sndJingle.src = "sound/jingle.mp3";
     sndTool.src = "sound/tool.mp3";
 
+    // セーブデータのロード
+    ls_Ponyhaniwa = loadLocalStorage("pony");
+    ls_horsehaniwa = loadLocalStorage("horse");
+    ls_kotohaniwa = loadLocalStorage("koto");
+    ls_househaniwa = loadLocalStorage("house");
+    ls_magatama = loadLocalStorage("magatama");
+    ls_seijikouro = loadLocalStorage("kouro");
+
+    // クリック操作
     canvas.addEventListener("click", () => {
         if (state === 0) {
             // ゲームスタート
@@ -149,10 +173,10 @@ function setup()
                 state = 1;
                 gameInit();
             }
-            // 説明
+            // コレクション
             if (mouse.x >= 445 && mouse.x <= 655 && mouse.y >= 350 && mouse.y <= 440) {
                 playSound(sndJingle);
-                state = 4;
+                state = 5;
             }
         } else if (state === 1) {
             if (posX == 10 && posY == 0) {
@@ -186,6 +210,7 @@ function setup()
             }
             // タイトルに戻る
             if (mouse.x >= 445 && mouse.x <= 655 && mouse.y >= 350 && mouse.y <= 440) {
+                gameInit();
                 state = 0;
             }
         } else if (state === 4) {
@@ -194,6 +219,34 @@ function setup()
             tutorialAnimation = 0;
             if (tutorialPage >= 5) {
                 tutorialPage = 0;
+                state = 0;
+            }
+        } else if (state === 5) {
+            if (isCollectionDetail) {
+                isCollectionDetail = false;
+            } else {
+                if (mouse.x > 170 && mouse.x <= 170 + 150 && mouse.y > 150 && mouse.y <= 150 + 150 && ls_Ponyhaniwa) {
+                    item = 3;
+                    isCollectionDetail = true;
+                } else if (mouse.x > 170 + 150 && mouse.x <= 170 + 300 && mouse.y > 150 && mouse.y <= 150 + 150 && ls_horsehaniwa) {
+                    item = 0;
+                    isCollectionDetail = true;
+                } else if (mouse.x > 170 + 300 && mouse.x <= 170 + 450 && mouse.y > 150 && mouse.y <= 150 + 150 && ls_kotohaniwa) {
+                    item = 2;
+                    isCollectionDetail = true;
+                } else if (mouse.x > 170 && mouse.x <= 170 + 150 && mouse.y > 150 + 150 && mouse.y <= 150 + 300 && ls_househaniwa) {
+                    item = 1;
+                    isCollectionDetail = true;
+                } else if (mouse.x > 170 + 150 && mouse.x <= 170 + 300 && mouse.y > 150 + 150 && mouse.y <= 150 + 300 && ls_magatama) {
+                    item = 4;
+                    isCollectionDetail = true;
+                } else if (mouse.x > 170 + 300 && mouse.x <= 170 + 450 && mouse.y > 150 + 150 && mouse.y <= 150 + 300 && ls_seijikouro) {
+                    item = 5;
+                    isCollectionDetail = true;
+                }
+            }
+
+            if (mouse.x > SCREEN_WIDTH / 2 - 100 && mouse.x < SCREEN_WIDTH / 2 - 100 + 200 && mouse.y > 480 && mouse.y < 530) {
                 state = 0;
             }
         }
@@ -226,8 +279,43 @@ function update()
 
         if (isGameClear) {
             playSound(sndJingle);
+            // 収集状況をセーブ
+            switch (item) {
+                case 0:
+                    ls_horsehaniwa = true;
+                    saveLocalStorage("horse", true);
+                    break;
+                case 1:
+                    ls_househaniwa = true;
+                    saveLocalStorage("house", true);
+                    break;
+                case 2:
+                    ls_kotohaniwa = true;
+                    saveLocalStorage("koto", true);
+                    break;
+                case 3:
+                    ls_Ponyhaniwa = true;
+                    saveLocalStorage("pony", true);
+                    break;
+                case 4:
+                    ls_magatama = true;
+                    saveLocalStorage("magatama", true);
+                    break;
+                case 5:
+                    ls_seijikouro = true;
+                    saveLocalStorage("kouro", true);
+                    break;
+            }
             state = 2;
         }
+
+        // タイマー機能
+        const now = Date.now();
+        timer = ((now - startTime) / 1000).toFixed(0);    
+        timerMinites = Math.round(timer / 60);
+        timerSeconds = ("0" + (timer % 60)).slice(-2);
+        
+
     } else if (state === 4) {
         tutorialAnimation++;
         // パーティクルの動き
@@ -282,10 +370,10 @@ function draw()
         ctx.textAlign = "center";
         if (mouse.x >= 445 && mouse.x <= 655 && mouse.y >= 350 && mouse.y <= 440) {
             ctx.drawImage(imgButtonFrame2, 0, 0, 70, 30, 445, 350, 210, 90);
-            ctx.fillText("あそびかた", 550, 401);
+            ctx.fillText("コレクション", 550, 401);
         } else {
             ctx.drawImage(imgButtonFrame1, 0, 0, 70, 30, 445, 350, 210, 90);
-            ctx.fillText("あそびかた", 550, 395);
+            ctx.fillText("コレクション", 550, 395);
         }
     }
 
@@ -395,6 +483,17 @@ function draw()
             ctx.drawImage(imgHeart2, 0, 0, 10, 10, 170, 500, 30, 30);
         }
 
+        // タイマー
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.fillRect(400, 500, 214, 50);
+        ctx.strokeStyle = "#cc9933";
+        ctx.strokeRect(400, 500, 214, 50);
+
+        ctx.font = "22px monospace";
+        ctx.fillStyle = "#000000";
+        ctx.textAlign = "left";
+        ctx.fillText("タイム：" + timerMinites + "分" + timerSeconds + "秒", 405, 538);
+
         // パーティクルの描画
         for (let p of particles) {
             ctx.drawImage(
@@ -426,7 +525,7 @@ function draw()
             ctx.fillText("もう１回あそぶ", 250, 395);
         }
 
-        // 説明ボタン
+        // 戻るボタン
         ctx.fillStyle = "#000";
         ctx.font = "bold 23px sans-serif";
         ctx.textAlign = "center";
@@ -457,6 +556,11 @@ function draw()
 
         // 出土品の画像
         ctx.drawImage(imgEx[item], 0, 0, 48, 48, 120, 170, 144, 144);
+
+        // クリアタイム
+        ctx.font = "18px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("クリアタイム：" + timerMinites + "分" + timerSeconds + "秒", SCREEN_WIDTH / 2, 300);
     }
     
     if (state === 3) {
@@ -484,7 +588,12 @@ function draw()
         ctx.fillStyle = "#666666";
         ctx.font = "12px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("クリックでつぎのページへ", 610, 440);
+        if (tutorialPage < 4) {
+            ctx.fillText("クリックでつぎのページへ", 610, 440);
+        } else {
+            ctx.fillText("クリックでせつめいをおわる", 610, 440);
+        }
+        
 
         if (tutorialPage === 0) {
             const animationFrame = tutorialAnimation % 120;
@@ -742,6 +851,93 @@ function draw()
             }
         }
     }
+
+    if (state === 5) {
+        // 背景
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.fillRect(100, 100, 600, 360);
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "#cc9933";
+        ctx.strokeRect(100, 100, 600, 360);
+
+        if (isCollectionDetail) {
+            // 詳細
+            // 出土品の名前
+            ctx.fillStyle = "#000";
+            ctx.font = "bold 23px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(itemName[item][0], SCREEN_WIDTH / 2, 150);
+
+            // ふりがな
+            ctx.font = "15px sans-serif";
+            ctx.fillText(itemName[item][1], SCREEN_WIDTH / 2, 125);
+
+            // 出土品の説明
+            ctx.font = "16px sans-serif";
+            ctx.textAlign = "left";
+            fillTextLine(explain[item], 280, 200, 25);
+
+            // 出土品の画像
+            ctx.drawImage(imgEx[item], 0, 0, 48, 48, 120, 170, 144, 144);
+
+            ctx.fillStyle = "#666666";
+            ctx.font = "12px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("クリックでコレクションへもどる", 590, 440);
+
+        } else {
+            // コレクションメニュー
+            ctx.fillStyle = "#000";
+            ctx.font = "bold 23px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("コレクション", SCREEN_WIDTH / 2, 140);
+
+            ctx.drawImage(imgCollectionBack, 0, 0, 150, 100, 170, 150, 450, 300);
+
+            if (ls_Ponyhaniwa) ctx.drawImage(imgEx[3], 0, 0, 48, 48, 0 + 170 + 3, 0 + 150 + 3, 144, 144);
+            if (ls_horsehaniwa) ctx.drawImage(imgEx[0], 0, 0, 48, 48, 0 + 170 + 150 + 3, 0 + 150 + 3, 144, 144);
+            if (ls_kotohaniwa) ctx.drawImage(imgEx[2], 0, 0, 48, 48, 0 + 170 + 300 + 3, 0 + 150 + 3, 144, 144);
+            if (ls_househaniwa) ctx.drawImage(imgEx[1], 0, 0, 48, 48, 0 + 170 + 3, 0 + 150 + 150 + 3, 144, 144);
+            if (ls_magatama) ctx.drawImage(imgEx[4], 0, 0, 48, 48, 0 + 170 + 150 + 3, 0 + 150 + 150 + 3, 144, 144);
+            if (ls_seijikouro) ctx.drawImage(imgEx[5], 0, 0, 48, 48, 0 + 170 + 300 + 3, 0 + 150 + 150 + 3, 144, 144);
+
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = "#cc9933";
+            if (mouse.x > 170 && mouse.x <= 170 + 150 && mouse.y > 150 && mouse.y <= 150 + 150) {
+                ctx.strokeRect(170, 150, 150, 150);
+            } else if (mouse.x > 170 + 150 && mouse.x <= 170 + 300 && mouse.y > 150 && mouse.y <= 150 + 150) {
+                ctx.strokeRect(170 + 150, 150, 150, 150);
+            } else if (mouse.x > 170 + 300 && mouse.x <= 170 + 450 && mouse.y > 150 && mouse.y <= 150 + 150) {
+                ctx.strokeRect(170 + 300, 150, 150, 150);
+            } else if (mouse.x > 170 && mouse.x <= 170 + 150 && mouse.y > 150 + 150 && mouse.y <= 150 + 300) {
+                ctx.strokeRect(170, 150 + 150, 150, 150);
+            } else if (mouse.x > 170 + 150 && mouse.x <= 170 + 300 && mouse.y > 150 + 150 && mouse.y <= 150 + 300) {
+                ctx.strokeRect(170 + 150, 150 + 150, 150, 150);
+            } else if (mouse.x > 170 + 300 && mouse.x <= 170 + 450 && mouse.y > 150 + 150 && mouse.y <= 150 + 300) {
+                ctx.strokeRect(170 + 300, 150 + 150, 150, 150);
+            }
+
+            // タイトルに戻るボタン
+            if (mouse.x > SCREEN_WIDTH / 2 - 100 && mouse.x < SCREEN_WIDTH / 2 - 100 + 200 && mouse.y > 480 && mouse.y < 530) {
+                ctx.fillStyle = "#996600";
+                ctx.fillRect(SCREEN_WIDTH / 2 - 100, 480, 200, 50);
+                ctx.lineWidth = 5;
+                ctx.strokeStyle = "#663300";
+                ctx.strokeRect(SCREEN_WIDTH / 2 - 100, 480, 200, 50);
+            } else {
+                ctx.fillStyle = "#cc9900";
+                ctx.fillRect(SCREEN_WIDTH / 2 - 100, 480, 200, 50);
+                ctx.lineWidth = 5;
+                ctx.strokeStyle = "#996600";
+                ctx.strokeRect(SCREEN_WIDTH / 2 - 100, 480, 200, 50);
+            }
+
+            ctx.font = "bold 23px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#000000";
+            ctx.fillText("タイトルにもどる", SCREEN_WIDTH / 2, 510);
+        } 
+    }
 }
 
 function gameInit()
@@ -751,6 +947,7 @@ function gameInit()
     particles = [];
     toolAnimation = 0;
     damageAnimation = 0;
+    startTime = Date.now();
 
     // 盤面リセット
     for (let y = 0; y < field.length; y++) {
@@ -896,4 +1093,15 @@ function doDigAction() {
             if (field[x][y] != 0) isGameClear = false;
         }
     }
+}
+
+function saveLocalStorage(key, flag) {
+    const value = flag.toString();
+    localStorage.setItem(key, value);
+}
+
+function loadLocalStorage(key) {
+    const value = localStorage.getItem(key);
+    if (value === null) return false;
+    return value === "true";
 }

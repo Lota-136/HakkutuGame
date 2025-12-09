@@ -14,7 +14,7 @@ const itemName = [
 const explain = [
     "馬を表したはにわです。現代の馬と比べて足が短く、体には乗馬　する時に必要なさまざまな道具がつけられています。",
     "高床式（たかゆかしき）の建物を表現したはにわです。屋根には　鰹木（かつおぎ）という、その　家に住んでいた人の地位の高さを表すものがついています。",
-    "イスにすわり、５本の弦がある　琴（こと）をヒザにのせた人物のはにわです。はにわのカケラが　発掘されたあと、それをもとに　復元されました。",
+    "イスにすわり、５本の弦がある　琴をヒザにのせた人物のはにわ　です。はにわのカケラが発掘　　されたあと、それをもとに復元　されました。",
     "小馬のはにわです。他の馬の　　はにわにある鞍（くら）や　　　たてがみがなく、発見されたときは「子犬型埴輪」として紹介　　されていました。",
     "横から見た動物のように見える　ことから獣型勾玉と呼ばれており弥生（やよい）時代前期のものと考えられています。",
     "田原城主の菩提寺（ぼだいじ）、先祖のお墓がある寺である　　　千光寺（せんこうじ）跡の墓地　から発見された香炉です。"
@@ -30,8 +30,7 @@ const SCREEN_HEIGHT = 432;
 
 let mouse = {};
 
-let state = 0;
-let debug = false;
+let state = 4;
 
 let posX;
 let posY;
@@ -45,8 +44,19 @@ let isDamaged = false;  // この番ダメージを受けたか
 let isExcavated = false;    // この番土を掘ったか
 let particles = [];
 let damageAnimation = 0;
-let tutorialPage = 0;
+let tutorialPage = 1;
 let tutorialAnimation = 0;
+let startTime;
+let timer;
+let timerMinites;
+let timerSeconds;
+let isCollectionDetail = false;
+let ls_Ponyhaniwa;
+let ls_horsehaniwa;
+let ls_kotohaniwa;
+let ls_househaniwa;
+let ls_magatama;
+let ls_seijikouro;
 
 let field = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -75,6 +85,7 @@ const imgBack = new Image();
 const imgDig = new Image();
 const imgHand = new Image();
 const imgButtonFrame = new Image();
+const imgCollectionBack = new Image();
 
 imgSoil.src = "img/soil.png";
 imgSoil2.src = "img/soil2.png";
@@ -91,6 +102,7 @@ imgBack.src = "img/back.png";
 imgDig.src = "img/dig.png";
 imgHand.src = "img/hand.png";
 imgButtonFrame.src = "img/buttonframe_sp.png";
+imgCollectionBack.src = "img/collectionBack.png";
 
 const sndExcavate = new Audio();
 const sndMiss = new Audio();
@@ -118,10 +130,6 @@ function setup() {
     canvas = document.createElement("canvas");
 
     const container = document.getElementById("canvas-container");
-    if (!container) {
-        console.error("canvas-container が見つかりません。");
-        return;
-    }
 
     let rawScale = Math.min(
         (window.innerWidth - 60) / SCREEN_WIDTH,
@@ -155,20 +163,26 @@ function setup() {
         return img;
     });
 
+    ls_Ponyhaniwa = loadLocalStorage("pony");
+    ls_horsehaniwa = loadLocalStorage("horse");
+    ls_kotohaniwa = loadLocalStorage("koto");
+    ls_househaniwa = loadLocalStorage("house");
+    ls_magatama = loadLocalStorage("magatama");
+    ls_seijikouro = loadLocalStorage("kouro");
+
     canvas.addEventListener("touchstart", function (e) {
         updateTouchPos(e);
 
         if (state === 0) {
             if (mouse.x > 33 && mouse.x < 183 && mouse.y > 320 && mouse.y < 370) {
+                playSound(sndJingle);
                 gameInit();
                 state = 1;
             }
             if (mouse.x > 249 && mouse.x < 399 && mouse.y > 320 && mouse.y < 370) {
-                state = 4;
+                state = 5;
             }
-        }
-
-        if (state === 1) {
+        } else if (state === 1) {
             // タップ座標を盤面座標に変換
             const tapX = Math.floor(mouse.x / 48);
             const tapY = Math.floor(mouse.y / 48);
@@ -177,10 +191,9 @@ function setup() {
                 digTargetX = tapX;
                 digTargetY = tapY;
             }
-        }
-
-        if (state === 2 || state === 3) {
+        } else if (state === 2 || state === 3) {
             if (mouse.x > 33 && mouse.x < 183 && mouse.y > 320 && mouse.y < 370) {
+                playSound(sndJingle);
                 gameInit();
                 state = 1;
             }
@@ -188,15 +201,41 @@ function setup() {
                 gameInit();
                 state = 0;
             }
-        }
-
-        if (state === 4) {
+        } else if (state === 4) {
             tutorialPage++;
             particles = [];
             tutorialAnimation = 0;
             if (tutorialPage > 6) {
                 tutorialPage = 0;
                 state = 0;
+            }
+        } else if (state === 5) {
+            if (isCollectionDetail) {
+                isCollectionDetail = false;
+            } else {
+                if (mouse.x > SCREEN_WIDTH / 2 - 150 + 2 && mouse.x < SCREEN_WIDTH / 2 - 150 + 2 + 96 && mouse.y > SCREEN_HEIGHT / 2 - 100 + 2 && mouse.y < SCREEN_HEIGHT / 2 - 100 + 2 + 96 && ls_Ponyhaniwa) {
+                    item = 3;
+                    isCollectionDetail = true;
+                } else if (mouse.x > SCREEN_WIDTH / 2 - 150 + 100 + 2 && mouse.x < SCREEN_WIDTH / 2 - 150 + 100 + 2 + 96 && mouse.y > SCREEN_HEIGHT / 2 - 100 + 2 && mouse.y < SCREEN_HEIGHT / 2 - 100 + 2 + 96 && ls_horsehaniwa) {
+                    item = 0;
+                    isCollectionDetail = true;
+                } else if (mouse.x > SCREEN_WIDTH / 2 - 150 + 200 + 2 && mouse.x < SCREEN_WIDTH / 2 - 150 + 200 + 2 + 96 && mouse.y > SCREEN_HEIGHT / 2 - 100 + 2 && mouse.y < SCREEN_HEIGHT / 2 - 100 + 2 + 96 && ls_kotohaniwa) {
+                    item = 2;
+                    isCollectionDetail = true;
+                } else if (mouse.x > SCREEN_WIDTH / 2 - 150 + 2 && mouse.x < SCREEN_WIDTH / 2 - 150 + 2 + 96 && mouse.y > SCREEN_HEIGHT / 2 - 100 + 100 + 2 && mouse.y < SCREEN_HEIGHT / 2 - 100 + 100 + 2 + 96 && ls_househaniwa) {
+                    item = 1;
+                    isCollectionDetail = true;
+                } else if (mouse.x > SCREEN_WIDTH / 2 - 150 + 100 + 2 && mouse.x < SCREEN_WIDTH / 2 - 150 + 100 + 2 + 96 && mouse.y > SCREEN_HEIGHT / 2 - 100 + 100 + 2 && mouse.y < SCREEN_HEIGHT / 2 - 100 + 100 + 2 + 96 && ls_magatama) {
+                    item = 4;
+                    isCollectionDetail = true;
+                } else if (mouse.x > SCREEN_WIDTH / 2 - 150 + 200 + 2 && mouse.x < SCREEN_WIDTH / 2 - 150 + 200 + 2 + 96 && mouse.y > SCREEN_HEIGHT / 2 - 100 + 100 + 2 && mouse.y < SCREEN_HEIGHT / 2 - 100 + 100 + 2 + 96 && ls_seijikouro) {
+                    item = 5;
+                    isCollectionDetail = true;
+                }
+
+                if (mouse.x > 40 && mouse.x < 190 && mouse.y > 330 && mouse.y < 390) {
+                    state = 0;
+                }
             }
         }
 
@@ -248,8 +287,41 @@ function update() {
 
         if (isGameClear) {
             playSound(sndJingle);
+            switch (item) {
+                case 0:
+                    ls_horsehaniwa = true;
+                    saveLocalStorage("horse", true);
+                    break;
+                case 1:
+                    ls_househaniwa = true;
+                    saveLocalStorage("house", true);
+                    break;
+                case 2:
+                    ls_kotohaniwa = true;
+                    saveLocalStorage("koto", true);
+                    break;
+                case 3:
+                    ls_Ponyhaniwa = true;
+                    saveLocalStorage("pony", true);
+                    break;
+                case 4:
+                    ls_magatama = true;
+                    saveLocalStorage("magatama", true);
+                    break;
+                case 5:
+                    ls_seijikouro = true;
+                    saveLocalStorage("kouro", true);
+                    break;
+            }
             state = 2;
         }
+
+        // タイマー機能
+        const now = Date.now();
+        timer = ((now - startTime) / 1000).toFixed(0);
+        timerMinites = Math.round(timer / 60);
+        timerSeconds = ("0" + (timer % 60)).slice(-2);
+
     } else if (state === 4) {
         tutorialAnimation++;
         // パーティクルの動き
@@ -292,7 +364,7 @@ function draw() {
     }
 
 
-    if (state == 0) {
+    if (state === 0) {
         // タイトル
         ctx.drawImage(imgTitle, 0, 0, 180, 100, 36, 50, 360, 200);
 
@@ -304,16 +376,16 @@ function draw() {
         ctx.textAlign = "center";
         ctx.fillText("ゲームスタート", SCREEN_WIDTH / 4, 350);
 
-        // 説明
+        // コレクション
         ctx.drawImage(imgButtonFrame, 0, 0, 50, 20, 249, 320, 150, 60);
 
         ctx.fillStyle = "#000";
         ctx.font = "15px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("あそびかた", SCREEN_WIDTH / 4 * 3, 350);
+        ctx.fillText("コレクション", SCREEN_WIDTH / 4 * 3, 350);
     }
 
-    if (state == 1) {
+    if (state === 1) {
         // 出土品画像
         if (imgEx[item].complete) {
             ctx.drawImage(imgEx[item], 0, 0, 48, 48, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -358,7 +430,7 @@ function draw() {
         }
     }
 
-    if (state == 2 || state == 3) {
+    if (state === 2 || state === 3) {
         // 背景
         ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
         ctx.fillRect(20, 20, SCREEN_WIDTH - 40, SCREEN_HEIGHT - 40);
@@ -380,7 +452,7 @@ function draw() {
         ctx.fillText("タイトルにもどる", SCREEN_WIDTH / 4 * 3, 350);
     }
 
-    if (state == 2) {
+    if (state === 2) {
         // 出土品の名前
         ctx.fillStyle = "#000";
         ctx.font = "bold 20px sans-serif";
@@ -398,9 +470,14 @@ function draw() {
 
         // 出土品の画像
         ctx.drawImage(imgEx[item], 0, 0, 48, 48, 40, 80, 144, 144);
+
+        // クリアタイム
+        ctx.font = "16px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("クリアタイム：" + timerMinites + "分" + timerSeconds + "秒", SCREEN_WIDTH / 2, 290);
     }
 
-    if (state == 3) {
+    if (state === 3) {
         // ゲームオーバー
         ctx.fillStyle = "#000";
         ctx.font = "bold 20px sans-serif";
@@ -421,7 +498,12 @@ function draw() {
         ctx.fillStyle = "#666666";
         ctx.font = "12px sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText("タッチでつぎのページへ", 320, 400);
+        if (tutorialPage < 6) {
+            ctx.fillText("タッチでつぎのページへ", 320, 400);
+        } else {
+            ctx.fillText("タッチでせつめいをおわる", 320, 400);
+        }
+        
 
         if (tutorialPage === 1) {
             const animationFrame = tutorialAnimation % 90;
@@ -720,6 +802,63 @@ function draw() {
             }
         }
     }
+
+    if (state === 5) {
+        // 背景
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.fillRect(20, 20, SCREEN_WIDTH - 40, SCREEN_HEIGHT - 40);
+
+        if (isCollectionDetail) {
+            // 出土品の名前
+            ctx.fillStyle = "#000";
+            ctx.font = "bold 20px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(itemName[item][0], SCREEN_WIDTH / 2, 60);
+
+            // ふりがな
+            ctx.font = "12px sans-serif";
+            ctx.fillText(itemName[item][1], SCREEN_WIDTH / 2, 40);
+
+            // 出土品の説明
+            ctx.font = "14px sans-serif";
+            ctx.textAlign = "left";
+            fillTextLine(explain[item], 194, 100, 15);
+
+            // 出土品の画像
+            ctx.drawImage(imgEx[item], 0, 0, 48, 48, 40, 80, 144, 144);
+
+            ctx.fillStyle = "#666666";
+            ctx.font = "12px sans-serif";
+            ctx.textAlign = "right";
+            ctx.fillText("タッチでコレクションへもどる", SCREEN_WIDTH - 30, 400);
+        } else {
+            ctx.fillStyle = "#000";
+            ctx.font = "bold 20px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("コレクション", SCREEN_WIDTH / 2, 60);
+
+            ctx.drawImage(imgCollectionBack, 0, 0, 150, 100, SCREEN_WIDTH / 2 - 150, SCREEN_HEIGHT / 2 - 100, 300, 200);
+            if (ls_Ponyhaniwa)  ctx.drawImage(imgEx[3], 0, 0, 48, 48, SCREEN_WIDTH / 2 - 150 + 2,       SCREEN_HEIGHT / 2 - 100 + 2,        96, 96);
+            if (ls_horsehaniwa) ctx.drawImage(imgEx[0], 0, 0, 48, 48, SCREEN_WIDTH / 2 - 150 + 100 + 2, SCREEN_HEIGHT / 2 - 100 + 2,        96, 96);
+            if (ls_kotohaniwa)  ctx.drawImage(imgEx[2], 0, 0, 48, 48, SCREEN_WIDTH / 2 - 150 + 200 + 2, SCREEN_HEIGHT / 2 - 100 + 2,        96, 96);
+            if (ls_househaniwa) ctx.drawImage(imgEx[1], 0, 0, 48, 48, SCREEN_WIDTH / 2 - 150 + 2,       SCREEN_HEIGHT / 2 - 100 + 100 + 2,  96, 96);
+            if (ls_magatama)    ctx.drawImage(imgEx[4], 0, 0, 48, 48, SCREEN_WIDTH / 2 - 150 + 100 + 2, SCREEN_HEIGHT / 2 - 100 + 100 + 2,  96, 96);
+            if (ls_seijikouro)  ctx.drawImage(imgEx[5], 0, 0, 48, 48, SCREEN_WIDTH / 2 - 150 + 200 + 2, SCREEN_HEIGHT / 2 - 100 + 100 + 2,  96, 96);
+
+            ctx.fillStyle = "#666666";
+            ctx.font = "12px sans-serif";
+            ctx.textAlign = "right";
+            ctx.fillText("タッチでせつめいページへ", SCREEN_WIDTH - 30, 400);
+
+            // タイトルに戻る
+            ctx.drawImage(imgButtonFrame, 0, 0, 50, 20, 40, 330, 150, 60);
+
+            ctx.fillStyle = "#000";
+            ctx.font = "15px sans-serif";
+            ctx.textAlign = "left";
+            ctx.fillText("タイトルにもどる", 55, 360);
+        }
+    }
 }
 
 function gameInit() {
@@ -727,6 +866,7 @@ function gameInit() {
     tool = 1;
     particles = [];
     damageAnimation = 0;
+    startTime = Date.now();
 
     // HP表示を初期化
     updateHP(hp);
@@ -886,7 +1026,6 @@ function fillTextLine(text, x, y, charNum) {
     }
 }
 
-
 function createParticles(x, y, img) {
     const pieces = [
         { sx: 8, sy: 4, vx: 3, vy: 0 },
@@ -989,3 +1128,14 @@ window.addEventListener('resize', () => {
 window.addEventListener('load', () => {
     window.dispatchEvent(new Event('resize'));
 });
+
+function saveLocalStorage(key, flag) {
+    const value = flag.toString();
+    localStorage.setItem(key, value);
+}
+
+function loadLocalStorage(key) {
+    const value = localStorage.getItem(key);
+    if (value === null) return false;
+    return value === "true";
+}
