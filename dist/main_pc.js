@@ -1,3 +1,4 @@
+export {};
 "use strict";
 // 文字数制限：25字
 const itemName = [
@@ -1040,5 +1041,4 @@ function loadLocalStorage(key) {
         return false;
     return value === "true";
 }
-export {};
 //# sourceMappingURL=main_pc.js.map

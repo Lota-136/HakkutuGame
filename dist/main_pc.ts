@@ -1,3 +1,4 @@
+export {};
 "use strict";
 
 // 文字数制限：25字
