@@ -331,7 +331,7 @@ function update(): void
         // タイマー機能
         const now = Date.now();
         timer = Number(((now - startTime) / 1000).toFixed(0));    
-        timerMinites = ("0" + Math.round(timer / 60)).slice(-2);
+        timerMinites = ("0" + Math.floor(timer / 60)).slice(-2);
         timerSeconds = ("0" + (timer % 60)).slice(-2);
         
 
