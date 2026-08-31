@@ -4,6 +4,7 @@
 
 ### 使用言語・ツール
 JavaScript  
+TypeScript  
 HTML・CSS  
 Visual Studio Code  
 GitHub Pages（公開時）  
