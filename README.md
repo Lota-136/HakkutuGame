@@ -1,5 +1,13 @@
 # はっくつゲーム
-
+### 作品概要
 大阪府四條畷市の埋蔵文化財について学ぶブラウザゲーム。  
+
+### 使用言語・ツール
+JavaScript  
+HTML・CSS  
+Visual Studio Code  
+GitHub Pages（公開時）  
+  
+### 履歴
 2025年6月〜2026年1月：JavaScriptを用いて作成。  
-2026年3月：TypeScriptを用いてリメイク
+2026年3月：TypeScriptを用いてリメイク  
